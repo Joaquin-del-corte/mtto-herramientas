@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mantenimiento de Herramientas</title>
+<style>
+  :root{
+    --navy:#1f3864; --blue:#2e5496; --blue2:#3b6bc4; --bg:#f4f6fb; --card:#ffffff;
+    --ink:#1c2333; --muted:#7a8296; --line:#e4e8f0;
+    --green:#1a9d63; --greenbg:#e3f6ec; --yellow:#c98a00; --yellowbg:#fff4d6;
+    --red:#d0342c; --redbg:#fde3e1; --grey:#8a93a6; --greybg:#eef1f6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
+  .app{max-width:720px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+  header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+  header .logo{width:34px;height:34px;border-radius:8px;background:#fff2;display:flex;align-items:center;justify-content:center;font-size:18px}
+  header h1{font-size:16px;margin:0;font-weight:700;flex:1;line-height:1.1}
+  header h1 small{display:block;font-weight:400;font-size:11px;opacity:.8}
+  header .who{font-size:12px;text-align:right;opacity:.95;cursor:pointer;white-space:nowrap}
+  header .who b{display:block}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#5fd08a;margin-right:4px}
+  main{flex:1;padding:14px;padding-bottom:90px}
+  h2{font-size:17px;margin:4px 0 12px}
+  h3{font-size:14px;margin:16px 0 8px;color:var(--navy)}
+  .muted{color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0000000a}
+  .row{display:flex;gap:10px;align-items:center}
+  .between{justify-content:space-between}
+  .grow{flex:1}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .b-green{background:var(--greenbg);color:var(--green)} .b-yellow{background:var(--yellowbg);color:var(--yellow)}
+  .b-red{background:var(--redbg);color:var(--red)} .b-grey{background:var(--greybg);color:var(--grey)}
+  .b-blue{background:#e7effb;color:var(--blue)}
+  .pill{font-size:11px;color:var(--muted);background:var(--greybg);padding:2px 8px;border-radius:20px}
+  button{font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;font-weight:600}
+  .btn{background:var(--blue);color:#fff}
+  .btn:active{background:var(--navy)}
+  .btn-ghost{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+  .btn-soft{background:var(--greybg);color:var(--ink)}
+  .btn-sm{padding:7px 11px;font-size:12.5px;border-radius:9px}
+  .btn-block{width:100%}
+  .btn-danger{background:var(--redbg);color:var(--red)}
+  input,select,textarea{font-family:inherit;font-size:14px;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 4px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+  .kpi .card{padding:12px 8px;text-align:center;margin:0}
+  .kpi .n{font-size:24px;font-weight:800;line-height:1}
+  .kpi .l{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:600}
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;max-width:720px;margin:0 auto;background:#fff;border-top:1px solid var(--line);
+           display:flex;z-index:20;box-shadow:0 -2px 10px #0000000d}
+  nav.tabs button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 4px;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+  nav.tabs button .ic{font-size:19px}
+  nav.tabs button.active{color:var(--blue)}
+  .toolcard{cursor:pointer}
+  .toolcard .code{font-size:11px;color:var(--muted);font-weight:700}
+  .toolcard .nm{font-weight:700;font-size:14.5px;margin:2px 0}
+  .chk-item{border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:8px}
+  .chk-item .q{font-size:13.5px;font-weight:600;margin-bottom:8px}
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;padding:8px 0;border-radius:8px;font-size:12.5px;background:var(--greybg);color:var(--muted);font-weight:700}
+  .seg button.ok.on{background:var(--greenbg);color:var(--green);outline:2px solid var(--green)}
+  .seg button.fail.on{background:var(--redbg);color:var(--red);outline:2px solid var(--red)}
+  .seg button.na.on{background:var(--greybg);color:var(--ink);outline:2px solid var(--grey)}
+  .modal-bg{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:40}
+  .modal{background:#fff;width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+  .modal h2{margin-top:0}
+  .empty{text-align:center;color:var(--muted);padding:40px 20px}
+  .empty .ic{font-size:40px;display:block;margin-bottom:8px;opacity:.5}
+  .list-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .list-row:last-child{border-bottom:none}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .avatar.admin{background:var(--navy)}
+  .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:#e7effb;color:var(--blue)}
+  .tag.admin{background:#fde8cf;color:#b5651d}
+  .sel-user{cursor:pointer;transition:transform .05s}
+  .sel-user:active{transform:scale(.98)}
+  .banner{background:#e7effb;border:1px solid #cddffb;color:var(--navy);border-radius:12px;padding:11px 13px;font-size:12.5px;margin-bottom:12px}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  .chk-editrow{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .chk-editrow input{flex:1}
+  .hist-item{border-left:3px solid var(--line);padding:6px 0 6px 12px;margin-bottom:10px}
+  .hist-item.ok{border-color:var(--green)} .hist-item.rev{border-color:var(--red)}
+  select.mini{width:auto;padding:6px 8px;font-size:12px}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .center{max-width:460px;margin:0 auto}
+  code.k{background:var(--greybg);padding:2px 6px;border-radius:6px;font-size:12px;word-break:break-all}
+  .loader{display:flex;flex-direction:column;align-items:center;justify-content:center;height:70vh;color:var(--muted);gap:12px}
+  .spin{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="loader"><div class="spin"></div>Conectando…</div></div>
+
+<script>
+/* ============================================================
+   CONEXIÓN A LA API (Azure Functions)
+   ------------------------------------------------------------
+   La app y la API se publican juntas en el Static Web App, así que
+   la API queda en el mismo origen bajo /api. No hay claves que pegar:
+   el acceso es con usuario y contraseña.
+   ============================================================ */
+const API_BASE = (window.MANT_API_BASE || '') + '/api';
+
+/* ---------- Catálogo base de checklists y herramientas ---------- */
+const CHECKLIST_BASE = {
+  "Manual":        ["Limpieza general","Estado físico / mango","Filo o ajuste correcto","Sin desgaste ni óxido","Accesorios completos"],
+  "Eléctrica":     ["Limpieza general","Carcasa sin daños","Cable, enchufe y gatillo","Prueba de funcionamiento","Escobillas / batería","Guardas y accesorios"],
+  "Instrumento":   ["Limpieza","Carcasa y pantalla","Puntas / cables de prueba","Prueba de funcionamiento","Estado de batería","Certificado de calibración vigente"],
+  "CCTV / Redes":  ["Limpieza","Estado físico","Conectores y puertos","Prueba de funcionamiento","Batería / carga","Software / firmware al día"],
+  "Fotovoltaico":  ["Limpieza","Carcasa","Puntas / conectores MC4","Prueba de funcionamiento","Estado de batería","Calibración vigente"],
+  "Soldadura":     ["Limpieza","Carcasa y cables","Pinza / porta-electrodo","Prueba de funcionamiento","Careta / filtro","Conexión a tierra"],
+  "Seguridad/EPP": ["Limpieza","Integridad física","Sin cortes ni desgaste","Prueba funcional","Etiqueta / certificación vigente"]
+};
+const EXTRA_TRIM = ["Calibración / verificación de medición","Capacidad real de batería","Ajuste de tornillería y partes móviles","Lubricación","Prueba de continuidad / puesta a tierra","Revisión de certificación y vida útil"];
+const RAW_TOOLS = [
+  ["HM-01","Pelacables / stripper automático","Manual"],["HM-02","Alicate universal / de corte","Manual"],
+  ["HM-03","Ponchadora / crimpadora (RJ45, MC4)","Manual"],["HM-04","Destornilladores aislados 1000V","Manual"],
+  ["HM-05","Destornilladores de precisión","Manual"],["HM-06","Juego llaves Allen / Torx","Manual"],
+  ["HM-07","Llaves combinadas / dados","Manual"],["HM-08","Llave dinamométrica","Manual"],
+  ["HM-09","Cortatubos / dobladora conduit","Manual"],["HM-10","Flexómetro / cinta métrica","Manual"],
+  ["HM-11","Nivel láser","Manual"],["HM-12","Sonda pasacables","Manual"],
+  ["HE-01","Taladro / atornillador inalámbrico","Eléctrica"],["HE-02","Rotomartillo","Eléctrica"],
+  ["HE-03","Amoladora angular","Eléctrica"],["HE-04","Sierra circular / sable","Eléctrica"],
+  ["HE-05","Sierra caladora","Eléctrica"],["HE-06","Pistola de calor","Eléctrica"],
+  ["HE-07","Aspiradora industrial","Eléctrica"],["HE-08","Cargador y baterías","Eléctrica"],
+  ["IN-01","Multímetro digital","Instrumento"],["IN-02","Pinza amperimétrica","Instrumento"],
+  ["IN-03","Megóhmetro","Instrumento"],["IN-04","Telurómetro","Instrumento"],
+  ["IN-05","Secuencímetro","Instrumento"],["IN-06","Detector de voltaje sin contacto","Instrumento"],
+  ["IN-07","Cámara termográfica","Instrumento"],
+  ["CR-01","Tester de cámaras CCTV","CCTV / Redes"],["CR-02","Certificador de red UTP","CCTV / Redes"],
+  ["CR-03","Ponchadora de impacto","CCTV / Redes"],["CR-04","Localizador de cables (tone)","CCTV / Redes"],
+  ["CR-05","Laptop config PLC/HMI","CCTV / Redes"],
+  ["FV-01","Crimpadora / llave MC4","Fotovoltaico"],["FV-02","Pinza DC alta tensión","Fotovoltaico"],
+  ["FV-03","Trazador de curva I-V","Fotovoltaico"],["FV-04","Solarímetro","Fotovoltaico"],
+  ["SO-01","Máquina de soldar MIG/TIG","Soldadura"],["SO-02","Careta fotosensible","Soldadura"],
+  ["SO-03","Estación de soldadura / cautín","Soldadura"],["SO-04","Extractor de humo","Soldadura"],
+  ["SE-01","Escaleras / andamios","Seguridad/EPP"],["SE-02","Arnés y línea de vida","Seguridad/EPP"],
+  ["SE-03","Guantes / botas dieléctricas","Seguridad/EPP"],["SE-04","Kit de bloqueo LOTO","Seguridad/EPP"],
+  ["SE-05","Lámparas de trabajo","Seguridad/EPP"]
+];
+function uid(){ try{ if(typeof crypto!=='undefined'&&crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&0x3|0x8)).toString(16);}); }
+function seedData(){
+  const admin={id:uid(),name:"Supervisor",role:"admin"};
+  const t1={id:uid(),name:"J. Pérez",role:"tecnico"},t2={id:uid(),name:"M. Soto",role:"tecnico"},t3={id:uid(),name:"R. López",role:"tecnico"};
+  const users=[admin,t1,t2,t3]; const techs=[t1.id,t2.id,t3.id];
+  const tools=RAW_TOOLS.map((t,i)=>{const[code,name,cat]=t;const m=CHECKLIST_BASE[cat].slice();
+    return {id:uid(),code,name,category:cat,brand:"",serial:"",location:"Bodega A",assignedTo:techs[i%techs.length],
+      status:"Operativa",lastMonthly:null,lastQuarterly:null,monthlyChecklist:m,quarterlyChecklist:m.concat(EXTRA_TRIM)};});
+  const dd=(n)=>{const x=new Date();x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
+  tools[0].lastMonthly=dd(40);tools[0].lastQuarterly=dd(100);tools[0].brand="Klein";tools[0].serial="SN-0001";
+  tools[1].lastMonthly=dd(26); tools[2].lastMonthly=dd(5);
+  return {users,tools,tickets:[],settings:{company:"Mi Empresa"}};
+}
+
+/* ============================================================
+   ESTADO + CAPA DE DATOS (Supabase)
+   ============================================================ */
+let TOKEN=null;
+let DB={users:[],tools:[],tickets:[],faults:[],settings:{company:""}};
+let S={user:null,tab:"dash",filterUser:"all",faultView:"abierta"};
+let OFFLINE=false;
+let pollTimer=null;
+
+/* ---- sesión ---- */
+function saveSession(){try{localStorage.setItem('mant_session',JSON.stringify({token:TOKEN,user:S.user}));}catch(e){}}
+function loadSession(){try{const s=JSON.parse(localStorage.getItem('mant_session')||'null');if(s&&s.token){TOKEN=s.token;S.user=s.user;return true;}}catch(e){}return false;}
+function clearSession(){TOKEN=null;S.user=null;try{localStorage.removeItem('mant_session');}catch(e){}}
+
+/* ---- llamada a la API ---- */
+async function api(path, bodyObj){
+  let res;
+  try{
+    res = await fetch(API_BASE+path, {
+      method: bodyObj!==undefined ? 'POST':'GET',
+      headers: Object.assign({'Content-Type':'application/json'}, TOKEN?{'Authorization':'Bearer '+TOKEN}:{}),
+      body: bodyObj!==undefined ? JSON.stringify(bodyObj) : undefined
+    });
+  }catch(netErr){ const e=new Error('network'); e.network=true; throw e; }
+  let data=null; try{ data=await res.json(); }catch(e){}
+  if(!res.ok){ const e=new Error((data&&data.error)||('HTTP '+res.status)); e.status=res.status; throw e; }
+  return data;
+}
+function sessionExpired(){ stopPolling(); clearSession(); toast('Sesión expirada.'); renderLogin('Tu sesión expiró. Ingresa de nuevo.'); }
+
+/* ---- caché y cola offline ---- */
+const CACHE_KEY='mant_cache', QUEUE_KEY='mant_queue';
+function cacheSave(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(DB));}catch(e){}}
+function cacheLoad(){try{const r=localStorage.getItem(CACHE_KEY);if(r){DB=JSON.parse(r);if(!DB.faults)DB.faults=[];return true;}}catch(e){}return false;}
+function queueGet(){try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');}catch(e){return[];}}
+function queueSet(q){try{localStorage.setItem(QUEUE_KEY,JSON.stringify(q));}catch(e){}}
+function enqueue(kind,data){const q=queueGet();q.push({kind,data});queueSet(q);}
+async function runOp(op){
+  switch(op.kind){
+    case 'upsertTool': return dbUpsertTool(op.data);
+    case 'delTool':    return dbDelTool(op.data);
+    case 'upsertUser': return dbUpsertUser(op.data);
+    case 'delUser':    return dbDelUser(op.data);
+    case 'insertTicket':return dbInsertTicket(op.data);
+    case 'insertFalla':return dbInsertFalla(op.data);
+    case 'upsertFalla':return dbUpsertFalla(op.data);
+    case 'settings':   return dbSettings(op.data);
+  }
+}
+async function persist(ops){
+  cacheSave();
+  if(OFFLINE || (typeof navigator!=='undefined' && navigator.onLine===false)){ ops.forEach(o=>enqueue(o.kind,o.data)); updateOfflineUI(); return; }
+  for(const o of ops){
+    try{ await runOp(o); }
+    catch(e){
+      if(e.status===401){ sessionExpired(); return; }
+      if(e.network){ OFFLINE=true; enqueue(o.kind,o.data); }
+      else { toast('⚠️ '+e.message); }   // error de validación/permiso: no reintentar
+    }
+  }
+  updateOfflineUI();
+}
+async function flushQueue(){
+  if(!TOKEN)return; let q=queueGet(); if(!q.length){updateOfflineUI();return;}
+  const rest=[];
+  for(const op of q){ try{ await runOp(op); }catch(e){ if(e.status===401){sessionExpired();return;} rest.push(op); } }
+  queueSet(rest);
+  if(rest.length===0){ try{ await pullAll(); cacheSave(); OFFLINE=false; if(!modalOpen())render(); }catch(e){} }
+  updateOfflineUI();
+}
+function updateOfflineUI(){
+  let el=document.getElementById('offbar');
+  const q=queueGet().length;
+  const show=OFFLINE||q>0;
+  if(!show){ if(el)el.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.id='offbar';
+    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:55;background:#1c2333;color:#fff;padding:8px 15px;border-radius:22px;font-size:12px;font-weight:600;box-shadow:0 4px 16px #0005;max-width:92%;text-align:center';
+    document.body.appendChild(el); }
+  el.innerHTML=(OFFLINE?'📴 Sin conexión — trabajando offline':'☁️ Conectado')+(q?` · <b>${q}</b> por sincronizar`:'');
+}
+
+/* ---- compresión de fotos ---- */
+function compressImg(file,cb){
+  try{
+    const rd=new FileReader();
+    rd.onload=e=>{const img=new Image();img.onload=()=>{
+      const max=900;let w=img.width,h=img.height;
+      if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.55));
+    };img.onerror=()=>cb(null);img.src=e.target.result;};
+    rd.onerror=()=>cb(null);
+    rd.readAsDataURL(file);
+  }catch(e){cb(null);}
+}
+
+// La API devuelve los datos ya en el formato de la app (camelCase).
+async function pullAll(){
+  const d = await api('/data');
+  DB = {
+    users: d.users || [],
+    tools: (d.tools || []).sort((a,b)=>(a.code||'').localeCompare(b.code||'')),
+    tickets: d.tickets || [],
+    faults: d.faults || [],
+    settings: d.settings || {company:"Mi Empresa"}
+  };
+}
+// Operaciones de escritura -> endpoints de la API
+async function dbUpsertTool(t){ await api('/tool', t); }
+async function dbDelTool(id){ await api('/tool/delete', {id}); }
+async function dbUpsertUser(u){ await api('/user', u); }
+async function dbDelUser(id){ await api('/user/delete', {id}); }
+async function dbInsertTicket(k){ await api('/ticket', k); }   // el servidor actualiza la herramienta
+async function dbInsertFalla(f){ await api('/fault', f); }
+async function dbUpsertFalla(f){ await api('/fault/update', f); }
+async function dbSettings(c){ await api('/settings', {company:c}); }
+
+// Actualización automática (polling) + al volver el foco / la conexión.
+function startPolling(){
+  stopPolling();
+  pollTimer=setInterval(async()=>{
+    if(document.hidden || modalOpen() || OFFLINE || !TOKEN) return;
+    try{ await pullAll(); cacheSave(); if(!modalOpen()) render(); }
+    catch(e){ if(e.status===401) sessionExpired(); else if(e.network) { OFFLINE=true; updateOfflineUI(); } }
+  }, 15000);
+}
+function stopPolling(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+function modalOpen(){const m=document.getElementById('mroot');return !!(m&&m.innerHTML.trim());}
+
+/* ---------- utilidades ---------- */
+function TODAY(){return new Date(new Date().toISOString().slice(0,10));}
+function daysBetween(a,b){return Math.round((a-b)/86400000);}
+function fmt(s){if(!s)return "—";const d=new Date(s);return d.toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function initials(n){return (n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function userName(id){const u=DB.users.find(u=>u.id===id);return u?u.name:"Sin asignar";}
+function toolAlert(t){
+  const now=TODAY();
+  const ev=(last,cyc)=>{if(!last)return null;const d=new Date(last);d.setDate(d.getDate()+cyc);const diff=daysBetween(d,now);
+    return diff<0?"VENCIDA":(diff<=7?"PRÓXIMA":"OK");};
+  const m=ev(t.lastMonthly,30),q=ev(t.lastQuarterly,90);
+  if(!t.lastMonthly&&!t.lastQuarterly)return "SIN DATOS";
+  if(m==="VENCIDA"||q==="VENCIDA")return "VENCIDA";
+  if(m==="PRÓXIMA"||q==="PRÓXIMA")return "PRÓXIMA";
+  return "OK";
+}
+const ALERT_BADGE={"VENCIDA":"b-red","PRÓXIMA":"b-yellow","OK":"b-green","SIN DATOS":"b-grey"};
+function nextDate(t,type){const last=type==="mensual"?t.lastMonthly:t.lastQuarterly;const cyc=type==="mensual"?30:90;
+  if(!last)return null;const d=new Date(last);d.setDate(d.getDate()+cyc);return d.toISOString().slice(0,10);}
+async function guard(fn){try{await fn();}catch(e){ if(e.status===401){sessionExpired();return;} toast("⚠️ "+e.message); }}
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+const app=document.getElementById('app');
+async function boot(){
+  registerSW();
+  window.addEventListener('online',()=>{ OFFLINE=false; flushQueue(); });
+  window.addEventListener('offline',()=>{ OFFLINE=true; updateOfflineUI(); });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && TOKEN && !OFFLINE) manualRefresh(true); });
+  if(!loadSession()){ renderLogin(); return; }
+  try{
+    await pullAll(); cacheSave(); OFFLINE=false;
+    await flushQueue(); startPolling(); render();
+  }catch(e){
+    if(e.status===401){ clearSession(); renderLogin('Tu sesión expiró. Ingresa de nuevo.'); return; }
+    if(cacheLoad()){ OFFLINE=true; startPolling(); render(); toast('Sin conexión: modo offline.'); }
+    else { renderLogin('No se pudo conectar con el servidor. Reintenta.'); }
+  }
+}
+function registerSW(){ try{ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); } }catch(e){} }
+function render(){ if(!S.user){renderLogin();updateOfflineUI();return;} if(S.user.role==='admin')renderAdmin(); else renderTech(); updateOfflineUI(); }
+
+/* ---------- LOGIN (usuario + contraseña) ---------- */
+function renderLogin(msg, userVal){
+  app.innerHTML=`<header><div class="logo">🛠️</div><h1>Mantenimiento<small>Ingreso</small></h1></header>
+  <main><div class="center">
+    <div class="card">
+      <h3 style="margin-top:0">Iniciar sesión</h3>
+      ${msg?`<div class="banner" style="background:var(--redbg);border-color:#f5c2bd;color:var(--red)">${msg}</div>`:''}
+      <label class="f">Usuario</label>
+      <input id="l_user" autocapitalize="none" autocomplete="username" placeholder="tu.usuario" value="${(userVal||'').replace(/"/g,'&quot;')}">
+      <label class="f">Contraseña</label>
+      <input id="l_pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn btn-block" style="margin-top:14px" onclick="doLogin()">Entrar</button>
+    </div>
+    <p class="muted" style="font-size:12px;text-align:center">¿Olvidaste tu contraseña? Pídele al supervisor que la restablezca.</p>
+  </div></main>`;
+  setTimeout(()=>{const el=document.getElementById('l_user');if(el)el.focus();},60);
+}
+async function doLogin(){
+  const username=(document.getElementById('l_user').value||'').trim();
+  const password=document.getElementById('l_pass').value||'';
+  if(!username||!password){ renderLogin('Escribe usuario y contraseña.'); return; }
+  app.innerHTML=`<div class="loader"><div class="spin"></div>Entrando…</div>`;
+  try{
+    const d=await api('/login',{username,password});
+    TOKEN=d.token; S.user=d.user; saveSession();
+    S.tab=(S.user.role==='admin')?'dash':'tools';
+    if(d.mustChange){ renderChangePassword(true); return; }
+    await pullAll(); cacheSave(); OFFLINE=false; await flushQueue(); startPolling(); render();
+  }catch(e){
+    renderLogin(e.network?'No hay conexión con el servidor.':(e.message||'No se pudo entrar.'), username);
+  }
+}
+/* ---------- Cambio de contraseña ---------- */
+function renderChangePassword(forced){
+  app.innerHTML=`<header><div class="logo">🔒</div><h1>Contraseña<small>${forced?'Cambio obligatorio':'Cambiar mi contraseña'}</small></h1></header>
+  <main><div class="center"><div class="card">
+    ${forced?`<div class="banner">Por seguridad, define una contraseña nueva antes de continuar.</div>`:''}
+    <label class="f">Nueva contraseña (mínimo 6 caracteres)</label>
+    <input id="p1" type="password" autocomplete="new-password">
+    <label class="f">Repite la contraseña</label>
+    <input id="p2" type="password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangePassword(${forced?'true':'false'})">
+    <button class="btn btn-block" style="margin-top:14px" onclick="doChangePassword(${forced?'true':'false'})">Guardar contraseña</button>
+    ${forced?'':'<button class="btn-soft btn-block" style="margin-top:8px" onclick="render()">Cancelar</button>'}
+  </div></div></main>`;
+}
+async function doChangePassword(forced){
+  const p1=document.getElementById('p1').value||'', p2=document.getElementById('p2').value||'';
+  if(p1.length<6){ toast('La contraseña debe tener al menos 6 caracteres.'); return; }
+  if(p1!==p2){ toast('Las contraseñas no coinciden.'); return; }
+  try{
+    await api('/user/password',{newPassword:p1});
+    toast('Contraseña actualizada.');
+    if(forced){ await pullAll(); cacheSave(); startPolling(); render(); }
+    else render();
+  }catch(e){ if(e.status===401){sessionExpired();return;} toast('⚠️ '+e.message); }
+}
+/* ---------- Menú de cuenta ---------- */
+function accountMenu(){
+  modal(`<h2 style="margin-top:0">${S.user.name}</h2>
+    <p class="muted" style="font-size:12.5px;margin-top:0">${S.user.role==='admin'?'Supervisor / Admin':'Técnico'}${S.user.username?(' · '+S.user.username):''}</p>
+    <button class="btn btn-block" onclick="closeModal();renderChangePassword(false)">Cambiar mi contraseña</button>
+    <button class="btn-danger btn-block" style="margin-top:8px" onclick="closeModal();logout()">Cerrar sesión</button>
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cancelar</button>`);
+}
+function logout(){ stopPolling(); clearSession(); renderLogin(); }
+
+function header(){
+  return `<header>
+    <div class="logo">🛠️</div>
+    <h1>Mantenimiento<small><span class="dot"></span>${DB.settings.company||'Conectado'}</small></h1>
+    <div class="who" onclick="accountMenu()"><b>${S.user.name}</b>${S.user.role==='admin'?'Supervisor ▾':'Técnico ▾'}</div>
+  </header>`;
+}
+
+/* ============================================================
+   VISTA TÉCNICO
+   ============================================================ */
+function renderTech(){
+  const mine=DB.tools.filter(t=>t.assignedTo===S.user.id);
+  let body;
+  if(S.tab==='tools'){
+    body=mine.length?mine.map(toolCardTech).join(''):
+      `<div class="empty"><span class="ic">📭</span>No tienes herramientas asignadas.<br><span class="muted">Pídele al supervisor que te asigne.</span></div>`;
+    body=`<div class="banner">Tus responsabilidades: revisar y firmar el mantenimiento <b>mensual</b> y <b>trimestral</b> de tus herramientas.</div>
+          <h2>Mis herramientas <span class="pill">${mine.length}</span></h2>${body}`;
+  }else{
+    const tk=DB.tickets.filter(k=>k.userId===S.user.id).sort((a,b)=>b.date.localeCompare(a.date));
+    body=`<h2>Mi historial</h2>`+(tk.length?tk.map(histRow).join(''):`<div class="empty"><span class="ic">🗒️</span>Aún no registras revisiones.</div>`);
+  }
+  app.innerHTML=header()+`<main>${body}</main>`+techNav();
+}
+function techNav(){const b=(id,ic,l)=>`<button class="${S.tab===id?'active':''}" onclick="setTab('${id}')"><span class="ic">${ic}</span>${l}</button>`;
+  return `<nav class="tabs">${b('tools','🧰','Mis herramientas')}${b('hist','🗒️','Mi historial')}</nav>`;}
+function setTab(t){S.tab=t;render();}
+function toolCardTech(t){const a=toolAlert(t);const nm=nextDate(t,'mensual'),nq=nextDate(t,'trimestral');
+  const rep=t.status!=='Operativa';
+  return `<div class="card toolcard" onclick="openTool('${t.id}')">
+    <div class="row between"><span class="code">${t.code} · ${t.category}</span><span class="badge ${ALERT_BADGE[a]}">${a}</span></div>
+    <div class="nm">${t.name}</div>
+    ${rep?`<span class="badge b-red" style="margin-bottom:4px">🔧 ${t.status}</span>`:''}
+    <div class="row between muted" style="font-size:11.5px"><span>Mensual: ${nm?fmt(nm):'sin fecha'}</span><span>Trimestral: ${nq?fmt(nq):'sin fecha'}</span></div>
+  </div>`;}
+
+let DRAFT=null;
+function openTool(toolId){const t=DB.tools.find(x=>x.id===toolId);
+  modal(`<h2>${t.name}</h2>
+    <div class="row between"><span class="pill">${t.code}</span><span class="pill">${t.category}</span></div>
+    <p class="muted" style="font-size:12.5px">Asignada a: <b>${userName(t.assignedTo)}</b> · Estado: ${t.status}</p>
+    <div class="divider"></div>
+    <p style="font-weight:700;margin:0 0 8px">¿Qué revisión vas a registrar?</p>
+    <div class="grid2">
+      <button class="btn btn-block" onclick="startCheck('${t.id}','mensual')">📋 Mensual</button>
+      <button class="btn btn-ghost btn-block" onclick="startCheck('${t.id}','trimestral')">🔍 Trimestral</button>
+    </div>
+    <button class="btn-soft btn-block" style="margin-top:14px" onclick="closeModal()">Cerrar</button>`);}
+function startCheck(toolId,type){const t=DB.tools.find(x=>x.id===toolId);
+  const items=(type==='mensual'?t.monthlyChecklist:t.quarterlyChecklist);
+  DRAFT={toolId,type,results:items.map(i=>({item:i,value:null})),notes:""};renderCheck();}
+function renderCheck(){const t=DB.tools.find(x=>x.id===DRAFT.toolId);
+  const items=DRAFT.results.map((r,idx)=>`
+    <div class="chk-item"><div class="q">${idx+1}. ${r.item}</div>
+      <div class="seg">
+        <button class="ok ${r.value==='OK'?'on':''}" onclick="setRes(${idx},'OK')">✔ OK</button>
+        <button class="fail ${r.value==='Falla'?'on':''}" onclick="setRes(${idx},'Falla')">✖ Falla</button>
+        <button class="na ${r.value==='N.A.'?'on':''}" onclick="setRes(${idx},'N.A.')">N.A.</button>
+      </div>
+      ${r.value==='Falla'?`<div style="margin-top:9px">
+        <button class="btn-soft btn-sm" onclick="document.getElementById('ph${idx}').click()">📷 ${r.photo?'Cambiar foto':'Foto de la falla'}</button>
+        ${r.photo?`<button class="btn-danger btn-sm" onclick="rmPhoto(${idx})" style="margin-left:6px">Quitar</button>`:''}
+        <input type="file" id="ph${idx}" accept="image/*" capture="environment" style="display:none" onchange="addPhoto(${idx},this)">
+        ${r.photo?`<img src="${r.photo}" style="width:100%;max-height:190px;object-fit:cover;border-radius:10px;margin-top:8px">`:'<div class="muted" style="font-size:11.5px;margin-top:5px">Opcional: adjunta una foto del problema.</div>'}
+      </div>`:''}
+    </div>`).join('');
+  modal(`<div class="row between"><h2 style="margin:0">Revisión ${DRAFT.type}</h2><span class="pill">${t.code}</span></div>
+    <p class="muted" style="font-size:12.5px;margin:4px 0 10px">${t.name}</p>${items}
+    <label class="f">Observaciones</label>
+    <textarea id="dnotes" rows="2" placeholder="Opcional: detalla fallas o repuestos...">${DRAFT.notes}</textarea>
+    <div class="banner" style="margin-top:12px">Al guardar firmas como <b>${S.user.name}</b> con fecha de hoy.</div>
+    <button class="btn btn-block" onclick="submitCheck()">✍️ Firmar y guardar</button>
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cancelar</button>`);}
+function setRes(idx,val){const n=document.getElementById('dnotes');if(n)DRAFT.notes=n.value;
+  DRAFT.results[idx].value=val; if(val!=='Falla')DRAFT.results[idx].photo=null; renderCheck();}
+function addPhoto(idx,inp){const f=inp.files[0];if(!f)return;const n=document.getElementById('dnotes');if(n)DRAFT.notes=n.value;
+  toast("Procesando foto…"); compressImg(f,d=>{DRAFT.results[idx].photo=d;renderCheck();});}
+function rmPhoto(idx){const n=document.getElementById('dnotes');if(n)DRAFT.notes=n.value;DRAFT.results[idx].photo=null;renderCheck();}
+function submitCheck(){
+  const n=document.getElementById('dnotes');if(n)DRAFT.notes=n.value;
+  const pend=DRAFT.results.filter(r=>r.value===null).length;
+  if(pend>0&&!confirm(`Quedan ${pend} ítem(s) sin marcar. ¿Guardar de todos modos?`))return;
+  const hasFail=DRAFT.results.some(r=>r.value==='Falla');
+  const t=DB.tools.find(x=>x.id===DRAFT.toolId);
+  const today=new Date().toISOString().slice(0,10);
+  // El ticket guarda solo item+valor (las fotos van en el registro de falla)
+  const ticket={id:uid(),toolId:t.id,toolCode:t.code,toolName:t.name,userId:S.user.id,userName:S.user.name,
+    type:DRAFT.type,date:today,results:DRAFT.results.map(r=>({item:r.item,value:r.value})),notes:DRAFT.notes,
+    result:hasFail?'REVISAR':'APROBADO'};
+  const ops=[{kind:'insertTicket',data:ticket}];
+  // optimista
+  DB.tickets.push(ticket);
+  if(DRAFT.type==='mensual')t.lastMonthly=today; else t.lastQuarterly=today;
+  if(hasFail){
+    t.status="En reparación";
+    const failItems=DRAFT.results.filter(r=>r.value==='Falla').map(r=>({item:r.item,photo:r.photo||null}));
+    const falla={id:uid(),toolId:t.id,toolCode:t.code,toolName:t.name,reportedBy:S.user.id,reportedByName:S.user.name,
+      reportedDate:today,items:failItems,notes:DRAFT.notes,status:'abierta',
+      resolvedBy:null,resolvedByName:null,resolvedDate:null,resolutionNotes:null};
+    DB.faults.push(falla);
+    ops.push({kind:'insertFalla',data:falla});
+  }
+  // El servidor actualiza la herramienta (fecha y estado) al recibir el ticket.
+  DRAFT=null; closeModal();
+  toast(hasFail?"Guardado. ⚠️ Falla reportada.":"✔ Revisión registrada y firmada.");
+  render();
+  persist(ops);
+}
+
+/* ============================================================
+   VISTA ADMIN
+   ============================================================ */
+function renderAdmin(){
+  let body;
+  if(S.tab==='dash')body=adminDash();
+  else if(S.tab==='inv')body=adminInventory();
+  else if(S.tab==='people')body=adminPeople();
+  else if(S.tab==='faults')body=adminFaults();
+  else if(S.tab==='hist')body=adminHistory();
+  else if(S.tab==='data')body=adminData();
+  app.innerHTML=header()+`<main>${body}</main>`+adminNav();
+}
+function openFaultCount(){return DB.faults.filter(f=>f.status==='abierta').length;}
+function adminNav(){const of=openFaultCount();
+  const b=(id,ic,l,badge)=>`<button class="${S.tab===id?'active':''}" onclick="setTab('${id}')" style="position:relative"><span class="ic">${ic}</span>${l}${badge?`<span style="position:absolute;top:4px;right:14px;background:var(--red);color:#fff;font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 3px">${badge}</span>`:''}</button>`;
+  return `<nav class="tabs">${b('dash','📊','Panel')}${b('inv','🧰','Inventario')}${b('faults','⚠️','Fallas',of||'')}${b('people','👥','Personal')}${b('hist','🗒️','Historial')}${b('data','☁️','Datos')}</nav>`;}
+function counts(){const c={total:DB.tools.length,VENCIDA:0,"PRÓXIMA":0,OK:0,"SIN DATOS":0,rep:0};
+  DB.tools.forEach(t=>{c[toolAlert(t)]++;if(t.status!=="Operativa")c.rep++;});return c;}
+function adminDash(){
+  const c=counts();
+  const alerts=DB.tools.filter(t=>["VENCIDA","PRÓXIMA"].includes(toolAlert(t))).sort((a,b)=>toolAlert(a)==="VENCIDA"?-1:1);
+  const perUser=DB.users.filter(u=>u.role==='tecnico').map(u=>{
+    const ts=DB.tools.filter(t=>t.assignedTo===u.id);
+    const v=ts.filter(t=>toolAlert(t)==="VENCIDA").length,p=ts.filter(t=>toolAlert(t)==="PRÓXIMA").length;
+    return `<div class="list-row"><div class="avatar">${initials(u.name)}</div>
+      <div class="grow"><b>${u.name}</b><div class="muted" style="font-size:12px">${ts.length} herramientas</div></div>
+      ${v?`<span class="badge b-red">${v} venc.</span>`:''}${p?`<span class="badge b-yellow">${p} próx.</span>`:''}
+      ${!v&&!p?`<span class="badge b-green">al día</span>`:''}</div>`;}).join('');
+  const alertList=alerts.length?alerts.map(t=>`<div class="list-row">
+      <div class="grow"><b>${t.name}</b><div class="muted" style="font-size:12px">${t.code} · ${userName(t.assignedTo)}</div></div>
+      <span class="badge ${ALERT_BADGE[toolAlert(t)]}">${toolAlert(t)}</span></div>`).join('')
+    :`<div class="empty" style="padding:20px"><span class="ic">✅</span>Sin alertas. Todo al día.</div>`;
+  return `<h2>Panel de control</h2>
+    <div class="kpi">
+      <div class="card"><div class="n">${c.total}</div><div class="l">HERRAMIENTAS</div></div>
+      <div class="card"><div class="n" style="color:var(--red)">${c.VENCIDA}</div><div class="l">VENCIDAS</div></div>
+      <div class="card"><div class="n" style="color:var(--yellow)">${c["PRÓXIMA"]}</div><div class="l">PRÓXIMAS</div></div>
+      <div class="card"><div class="n" style="color:var(--green)">${c.OK}</div><div class="l">AL DÍA</div></div>
+    </div>
+    ${openFaultCount()?`<div class="card" style="border-color:#f0c9c5;background:#fff6f5;cursor:pointer" onclick="setTab('faults')">
+      <div class="row between"><b style="color:var(--red)">⚠️ ${openFaultCount()} falla(s) abierta(s)</b><span class="badge b-red">Ver ›</span></div>
+      <div class="muted" style="font-size:12px;margin-top:2px">Herramientas reportadas con problemas, pendientes de resolver.</div></div>`:''}
+    <h3>🔔 Alertas activas</h3><div class="card">${alertList}</div>
+    <h3>👥 Estado por técnico</h3><div class="card">${perUser||'<span class="muted">Sin técnicos.</span>'}</div>`;
+}
+function adminInventory(){
+  const users=DB.users.filter(u=>u.role==='tecnico');
+  const opts=[`<option value="all">Todos los técnicos</option>`].concat(users.map(u=>`<option value="${u.id}" ${S.filterUser===u.id?'selected':''}>${u.name}</option>`)).join('');
+  let list=DB.tools.slice(); if(S.filterUser!=='all')list=list.filter(t=>t.assignedTo===S.filterUser);
+  const rows=list.map(t=>{const a=toolAlert(t);
+    return `<div class="card toolcard" onclick="editTool('${t.id}')">
+      <div class="row between"><span class="code">${t.code} · ${t.category}</span><span class="badge ${ALERT_BADGE[a]}">${a}</span></div>
+      <div class="nm">${t.name}</div>
+      <div class="row between muted" style="font-size:11.5px"><span>👤 ${userName(t.assignedTo)}</span><span>${t.status}</span></div>
+    </div>`;}).join('');
+  return `<div class="row between"><h2 style="margin:0">Inventario</h2><span class="pill">${list.length} / ${DB.tools.length}</span></div>
+    <div class="toolbar" style="margin-top:12px">
+      <select class="mini" onchange="S.filterUser=this.value;render()">${opts}</select>
+      <button class="btn btn-sm" onclick="editTool('new')">＋ Herramienta</button>
+    </div>${rows||'<div class="empty"><span class="ic">🧰</span>Sin herramientas.</div>'}`;
+}
+function editTool(id){
+  const isNew=id==='new';
+  const t=isNew?{id:uid(),code:"",name:"",category:"Manual",brand:"",serial:"",location:"",assignedTo:(DB.users.find(u=>u.role==='tecnico')||{}).id||"",status:"Operativa",lastMonthly:null,lastQuarterly:null,monthlyChecklist:CHECKLIST_BASE["Manual"].slice(),quarterlyChecklist:CHECKLIST_BASE["Manual"].concat(EXTRA_TRIM)}:JSON.parse(JSON.stringify(DB.tools.find(x=>x.id===id)));
+  const uopts=DB.users.filter(u=>u.role==='tecnico').map(u=>`<option value="${u.id}" ${t.assignedTo===u.id?'selected':''}>${u.name}</option>`).join('');
+  const copts=Object.keys(CHECKLIST_BASE).map(c=>`<option ${t.category===c?'selected':''}>${c}</option>`).join('');
+  const sopts=["Operativa","En reparación","Fuera de servicio","En calibración"].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('');
+  window._editT=t;
+  const chkEdit=(arr,key)=>arr.map((it,i)=>`<div class="chk-editrow"><input value="${(it||'').replace(/"/g,'&quot;')}" onchange="_editT.${key}[${i}]=this.value"><button class="btn-danger btn-sm" onclick="_editT.${key}.splice(${i},1);editToolReopen()">✕</button></div>`).join('');
+  modal(`<h2>${isNew?'Nueva herramienta':'Editar herramienta'}</h2>
+    <div class="grid2"><div><label class="f">Código / ID</label><input id="e_code" value="${t.code}"></div>
+      <div><label class="f">Categoría</label><select id="e_cat" onchange="_recat(this.value)">${copts}</select></div></div>
+    <label class="f">Nombre</label><input id="e_name" value="${(t.name||'').replace(/"/g,'&quot;')}">
+    <div class="grid2"><div><label class="f">Marca / Modelo</label><input id="e_brand" value="${t.brand}"></div>
+      <div><label class="f">N° Serie</label><input id="e_serial" value="${t.serial}"></div></div>
+    <div class="grid2"><div><label class="f">Ubicación</label><input id="e_loc" value="${t.location}"></div>
+      <div><label class="f">Estado</label><select id="e_status">${sopts}</select></div></div>
+    <label class="f">Asignada a</label><select id="e_user">${uopts}</select>
+    <div class="grid2"><div><label class="f">Última rev. mensual</label><input type="date" id="e_lm" value="${t.lastMonthly||''}"></div>
+      <div><label class="f">Última rev. trimestral</label><input type="date" id="e_lq" value="${t.lastQuarterly||''}"></div></div>
+    <div class="divider"></div>
+    <h3 style="margin-top:0">📋 Checklist mensual</h3><div>${chkEdit(t.monthlyChecklist,'monthlyChecklist')}</div>
+    <button class="btn-soft btn-sm" onclick="_editT.monthlyChecklist.push('Nuevo ítem');editToolReopen()">＋ Ítem mensual</button>
+    <h3>🔍 Checklist trimestral</h3><div>${chkEdit(t.quarterlyChecklist,'quarterlyChecklist')}</div>
+    <button class="btn-soft btn-sm" onclick="_editT.quarterlyChecklist.push('Nuevo ítem');editToolReopen()">＋ Ítem trimestral</button>
+    <div class="divider"></div>
+    <button class="btn btn-block" onclick="saveTool('${isNew?'new':id}')">Guardar</button>
+    ${isNew?'':`<button class="btn-danger btn-block" style="margin-top:8px" onclick="deleteTool('${id}')">Eliminar herramienta</button>`}
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cancelar</button>`);
+}
+function _snapshotEdit(){const t=window._editT;const g=id=>document.getElementById(id);
+  if(g('e_code')){t.code=g('e_code').value;t.name=g('e_name').value;t.category=g('e_cat').value;t.brand=g('e_brand').value;t.serial=g('e_serial').value;t.location=g('e_loc').value;t.status=g('e_status').value;t.assignedTo=g('e_user').value;t.lastMonthly=g('e_lm').value||null;t.lastQuarterly=g('e_lq').value||null;}}
+function editToolReopen(){_snapshotEdit();const t=window._editT;const existing=DB.tools.find(x=>x.id===t.id);editTool(existing?t.id:'new');window._editT=t;}
+function _recat(cat){_snapshotEdit();const t=window._editT;t.category=cat;
+  if(confirm("¿Reemplazar los checklists por los de la categoría "+cat+"?")){t.monthlyChecklist=CHECKLIST_BASE[cat].slice();t.quarterlyChecklist=CHECKLIST_BASE[cat].concat(EXTRA_TRIM);}
+  editTool(DB.tools.find(x=>x.id===t.id)?t.id:'new');window._editT=t;}
+function saveTool(id){_snapshotEdit();const t=JSON.parse(JSON.stringify(window._editT));
+  if(!t.code||!t.name){alert("Código y nombre son obligatorios.");return;}
+  if(id==='new')DB.tools.push(t);else{const i=DB.tools.findIndex(x=>x.id===id);DB.tools[i]=t;}
+  DB.tools.sort((a,b)=>(a.code||'').localeCompare(b.code||''));
+  closeModal();toast("Herramienta guardada.");render();
+  persist([{kind:'upsertTool',data:t}]);
+}
+function deleteTool(id){if(!confirm("¿Eliminar esta herramienta del inventario?"))return;
+  DB.tools=DB.tools.filter(x=>x.id!==id);closeModal();toast("Herramienta eliminada.");render();
+  persist([{kind:'delTool',data:id}]);}
+
+function adminPeople(){
+  const rows=DB.users.map(u=>{const ts=DB.tools.filter(t=>t.assignedTo===u.id);
+    return `<div class="card toolcard" onclick="viewPerson('${u.id}')">
+      <div class="row"><div class="avatar ${u.role==='admin'?'admin':''}">${initials(u.name)}</div>
+        <div class="grow"><b>${u.name}</b><div class="muted" style="font-size:12px">${u.role==='admin'?'Supervisor / Admin':ts.length+' herramientas a cargo'}</div></div>
+        <span class="tag ${u.role==='admin'?'admin':''}">${u.role==='admin'?'ADMIN':'TÉCNICO'}</span></div></div>`;}).join('');
+  return `<div class="row between"><h2 style="margin:0">Personal</h2><button class="btn btn-sm" onclick="editUser('new')">＋ Persona</button></div>
+    <p class="muted" style="margin-top:4px">Cada técnico ve solo sus herramientas y es responsable de firmarlas.</p>${rows}`;
+}
+function viewPerson(id){const u=DB.users.find(x=>x.id===id);const ts=DB.tools.filter(t=>t.assignedTo===id);
+  const tk=DB.tickets.filter(k=>k.userId===id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
+  modal(`<div class="row"><div class="avatar ${u.role==='admin'?'admin':''}" style="width:46px;height:46px">${initials(u.name)}</div>
+      <div class="grow"><h2 style="margin:0">${u.name}</h2><span class="tag ${u.role==='admin'?'admin':''}">${u.role==='admin'?'ADMIN':'TÉCNICO'}</span></div></div>
+    <div class="divider"></div>
+    <h3 style="margin-top:0">🧰 Herramientas a cargo (${ts.length})</h3>
+    ${ts.map(t=>`<div class="list-row"><div class="grow"><b style="font-size:13.5px">${t.name}</b><div class="muted" style="font-size:11.5px">${t.code}</div></div><span class="badge ${ALERT_BADGE[toolAlert(t)]}">${toolAlert(t)}</span></div>`).join('')||'<span class="muted">Ninguna.</span>'}
+    <h3>🗒️ Últimas revisiones</h3>${tk.map(histRow).join('')||'<span class="muted">Sin registros.</span>'}
+    <div class="divider"></div>
+    <button class="btn btn-block" onclick="editUser('${id}')">Editar / reasignar</button>
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cerrar</button>`);}
+function editUser(id){const isNew=id==='new';const u=isNew?{id:uid(),name:"",role:"tecnico"}:DB.users.find(x=>x.id===id);
+  modal(`<h2>${isNew?'Nueva persona':'Editar persona'}</h2>
+    <label class="f">Nombre</label><input id="u_name" value="${(u.name||'').replace(/"/g,'&quot;')}">
+    <label class="f">Rol</label>
+    <select id="u_role"><option value="tecnico" ${u.role==='tecnico'?'selected':''}>Técnico</option><option value="admin" ${u.role==='admin'?'selected':''}>Supervisor / Admin</option></select>
+    <div class="divider"></div>
+    <button class="btn btn-block" onclick="saveUser('${isNew?'new':id}','${u.id}')">Guardar</button>
+    ${isNew?'':`<button class="btn-danger btn-block" style="margin-top:8px" onclick="deleteUser('${id}')">Eliminar</button>`}
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cancelar</button>`);}
+function saveUser(id,uidval){const name=document.getElementById('u_name').value.trim();const role=document.getElementById('u_role').value;
+  if(!name){alert("El nombre es obligatorio.");return;}
+  let user;
+  if(id==='new'){user={id:uidval,name,role};DB.users.push(user);}
+  else{user=DB.users.find(x=>x.id===id);user.name=name;user.role=role;}
+  closeModal();toast("Guardado.");render();
+  persist([{kind:'upsertUser',data:user}]);}
+function deleteUser(id){const affected=DB.tools.filter(t=>t.assignedTo===id);
+  if(affected.length>0){if(!confirm(`Esta persona tiene ${affected.length} herramienta(s) asignada(s). Quedarán sin asignar. ¿Continuar?`))return;
+    affected.forEach(t=>t.assignedTo="");}
+  DB.users=DB.users.filter(x=>x.id!==id);closeModal();toast("Eliminado.");render();
+  persist(affected.map(t=>({kind:'upsertTool',data:t})).concat([{kind:'delUser',data:id}]));}
+
+function adminFaults(){
+  const open=DB.faults.filter(f=>f.status==='abierta').sort((a,b)=>(b.reportedDate||'').localeCompare(a.reportedDate||''));
+  const done=DB.faults.filter(f=>f.status==='resuelta').sort((a,b)=>(b.resolvedDate||'').localeCompare(a.resolvedDate||''));
+  const list=(S.faultView==='abierta')?open:done;
+  const seg=(v,l,n)=>`<button class="btn-sm ${S.faultView===v?'btn':'btn-soft'}" onclick="S.faultView='${v}';render()">${l}${n?` (${n})`:''}</button>`;
+  const card=f=>{
+    const fotos=(f.items||[]).filter(i=>i.photo).map(i=>`<img src="${i.photo}" onclick="viewPhoto('${f.id}',${(f.items).indexOf(i)})" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer">`).join('');
+    const its=(f.items||[]).map(i=>`<li>${i.item}${i.photo?' 📷':''}</li>`).join('');
+    return `<div class="card">
+      <div class="row between"><b style="font-size:14px">${f.toolName}</b>
+        <span class="badge ${f.status==='abierta'?'b-red':'b-green'}">${f.status==='abierta'?'ABIERTA':'RESUELTA'}</span></div>
+      <div class="muted" style="font-size:11.5px">${f.toolCode} · Reportó ${f.reportedByName} · ${fmt(f.reportedDate)}</div>
+      <ul style="margin:8px 0 6px;padding-left:18px;font-size:13px">${its}</ul>
+      ${f.notes?`<div style="font-size:12.5px">📝 ${f.notes}</div>`:''}
+      ${fotos?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${fotos}</div>`:''}
+      ${f.status==='abierta'
+        ? `<button class="btn btn-block btn-sm" style="margin-top:10px" onclick="resolveFault('${f.id}')">✅ Marcar como resuelta</button>`
+        : `<div class="banner" style="margin:10px 0 0;background:var(--greenbg);border-color:#b6e6c9;color:var(--green)">Resuelta por <b>${f.resolvedByName||'—'}</b> · ${fmt(f.resolvedDate)}${f.resolutionNotes?` · ${f.resolutionNotes}`:''}</div>`}
+    </div>`;};
+  return `<div class="row between"><h2 style="margin:0">Fallas</h2><span class="pill">${open.length} abiertas</span></div>
+    <div class="toolbar" style="margin-top:12px">${seg('abierta','Abiertas',open.length)}${seg('resuelta','Resueltas',done.length)}</div>
+    ${list.length?list.map(card).join(''):`<div class="empty"><span class="ic">${S.faultView==='abierta'?'✅':'🗒️'}</span>${S.faultView==='abierta'?'No hay fallas abiertas.':'Sin fallas resueltas todavía.'}</div>`}`;
+}
+function viewPhoto(fid,idx){const f=DB.faults.find(x=>x.id===fid);const it=f.items[idx];if(!it||!it.photo)return;
+  modal(`<h2 style="margin-top:0">${f.toolName}</h2><p class="muted" style="font-size:12.5px;margin-top:0">${it.item}</p>
+    <img src="${it.photo}" style="width:100%;border-radius:12px"><button class="btn-soft btn-block" style="margin-top:12px" onclick="closeModal()">Cerrar</button>`);}
+function resolveFault(fid){const f=DB.faults.find(x=>x.id===fid);
+  modal(`<h2 style="margin-top:0">Resolver falla</h2>
+    <p class="muted" style="font-size:12.5px">${f.toolName} · ${f.toolCode}</p>
+    <label class="f">¿Qué se hizo? (reparación, repuesto, etc.)</label>
+    <textarea id="res_notes" rows="3" placeholder="Ej: se reemplazó el cable de poder y se probó OK."></textarea>
+    <div class="banner" style="margin-top:12px">Se registrará como resuelta por <b>${S.user.name}</b> hoy, y la herramienta volverá a <b>Operativa</b>.</div>
+    <button class="btn btn-block" onclick="doResolve('${fid}')">✅ Confirmar resolución</button>
+    <button class="btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Cancelar</button>`);}
+function doResolve(fid){const f=DB.faults.find(x=>x.id===fid);
+  const notes=(document.getElementById('res_notes')||{}).value||"";
+  f.status='resuelta';f.resolvedBy=S.user.id;f.resolvedByName=S.user.name;f.resolvedDate=new Date().toISOString().slice(0,10);f.resolutionNotes=notes;
+  const ops=[{kind:'upsertFalla',data:f}];
+  // Si la herramienta no tiene otras fallas abiertas, vuelve a Operativa
+  const t=DB.tools.find(x=>x.id===f.toolId);
+  if(t && !DB.faults.some(x=>x.toolId===t.id&&x.status==='abierta')){ t.status='Operativa'; ops.push({kind:'upsertTool',data:t}); }
+  closeModal();toast("Falla resuelta.");render();persist(ops);}
+
+function adminHistory(){const all=DB.tickets.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="row between"><h2 style="margin:0">Historial completo</h2><span class="pill">${all.length}</span></div>
+    <p class="muted" style="margin-top:4px">Registro de todas las revisiones firmadas.</p>
+    ${all.map(histRow).join('')||'<div class="empty"><span class="ic">🗒️</span>Aún no hay revisiones registradas.</div>'}`;}
+function histRow(k){const fails=k.results.filter(r=>r.value==='Falla').length;
+  return `<div class="hist-item ${k.result==='REVISAR'?'rev':'ok'}">
+    <div class="row between"><b style="font-size:13.5px">${k.toolName}</b><span class="badge ${k.result==='REVISAR'?'b-red':'b-green'}">${k.result}</span></div>
+    <div class="muted" style="font-size:11.5px">${k.toolCode} · ${k.type} · ${fmt(k.date)} · ✍️ ${k.userName}${fails?` · ⚠️ ${fails} falla(s)`:''}</div>
+    ${k.notes?`<div style="font-size:12px;margin-top:3px">📝 ${k.notes}</div>`:''}</div>`;}
+
+function adminData(){
+  return `<h2>Datos y cuenta</h2>
+    <div class="card"><h3 style="margin-top:0"><span class="dot"></span>Conectado</h3>
+      <p class="muted" style="font-size:12.5px">Los cambios se sincronizan automáticamente entre los dispositivos. Puedes forzar una actualización.</p>
+      <button class="btn btn-block" onclick="manualRefresh()">🔄 Refrescar ahora</button>
+    </div>
+    <div class="card"><h3 style="margin-top:0">🔒 Mi cuenta</h3>
+      <p class="muted" style="font-size:12.5px">Cambia tu contraseña de acceso.</p>
+      <button class="btn-ghost btn-block" onclick="renderChangePassword(false)">Cambiar mi contraseña</button>
+    </div>
+    <div class="card"><h3 style="margin-top:0">💾 Respaldo</h3>
+      <p class="muted" style="font-size:12.5px">Descarga una copia de todo (inventario, personal e historial).</p>
+      <button class="btn btn-block" onclick="exportData()">⬇️ Exportar a archivo</button>
+    </div>
+    <div class="card"><h3 style="margin-top:0">⚙️ Empresa</h3>
+      <label class="f">Nombre de la empresa</label><input id="cname" value="${DB.settings.company||''}">
+      <button class="btn btn-sm" style="margin-top:10px" onclick="saveCompany()">Guardar</button>
+    </div>`;
+}
+function manualRefresh(silent){guard(async()=>{await pullAll();cacheSave();render();if(!silent)toast("Actualizado.");});}
+function saveCompany(){const c=document.getElementById('cname').value;DB.settings.company=c;render();persist([{kind:'settings',data:c}]);}
+function exportData(){const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mantenimiento_'+new Date().toISOString().slice(0,10)+'.json';a.click();}
+
+/* ---------- Modal / toast ---------- */
+function modal(html){let m=document.getElementById('mroot');if(!m){m=document.createElement('div');m.id='mroot';document.body.appendChild(m);}
+  m.innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;}
+function closeModal(){const m=document.getElementById('mroot');if(m)m.innerHTML='';}
+function toast(msg){let t=document.createElement('div');t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:#1c2333;color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;z-index:60;box-shadow:0 4px 16px #0004;max-width:90%;text-align:center';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+
+/* ---------- Init ---------- */
+boot();
+</script>
+</body>
+</html>

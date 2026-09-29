@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de despliegue en Azure · App de Mantenimiento</title>
+<style>
+  body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1c2333;line-height:1.55;max-width:820px;margin:0 auto;padding:28px 20px 90px;background:#fff}
+  h1{color:#1f3864;font-size:26px;margin:0 0 4px}
+  .sub{color:#7a8296;margin:0 0 22px}
+  h2{color:#1f3864;font-size:20px;margin:34px 0 6px;border-bottom:2px solid #e4e8f0;padding-bottom:6px}
+  h3{font-size:15px;margin:18px 0 4px}
+  ol{padding-left:22px} ol li{margin:9px 0}
+  ul{padding-left:20px}
+  .step{background:#f4f6fb;border:1px solid #e4e8f0;border-radius:12px;padding:14px 18px;margin:14px 0}
+  .num{display:inline-flex;width:26px;height:26px;background:#2e5496;color:#fff;border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:13px;margin-right:8px;vertical-align:middle}
+  code{background:#eef1f6;padding:2px 7px;border-radius:6px;font-size:13px;font-family:Menlo,Consolas,monospace;word-break:break-word}
+  pre{background:#1c2333;color:#e6ecf7;padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.5}
+  .tip{background:#e3f6ec;border:1px solid #b6e6c9;border-radius:10px;padding:11px 15px;margin:12px 0;font-size:14px}
+  .warn{background:#fff4d6;border:1px solid #f0d78a;border-radius:10px;padding:11px 15px;margin:12px 0;font-size:14px}
+  .danger{background:#fde3e1;border:1px solid #f3b6b0;border-radius:10px;padding:11px 15px;margin:12px 0;font-size:14px}
+  b{color:#1f3864}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid #e4e8f0;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f4f6fb;color:#1f3864}
+  .files{background:#f4f6fb;border:1px solid #e4e8f0;border-radius:10px;padding:12px 16px;font-family:Menlo,Consolas,monospace;font-size:12.5px;white-space:pre;overflow-x:auto}
+  hr{border:none;border-top:1px solid #e4e8f0;margin:28px 0}
+</style>
+</head>
+<body>
+
+<h1>Guía de despliegue en Azure</h1>
+<p class="sub">App de Mantenimiento de Herramientas · Static Web Apps + Azure Functions + Azure SQL · con login propio</p>
+
+<p>Al terminar tendrás una <b>URL</b> (ej. <code>https://mantenimiento.azurestaticapps.net</code>) que tu equipo abre desde el celular, entra con <b>usuario y contraseña</b>, y todo queda en tu Azure. La app y su API se publican juntas: <b>no hay claves que pegar</b> en el archivo.</p>
+
+<h3>Los archivos que vas a desplegar</h3>
+<p>Manténlos con <b>esta estructura exacta</b> de carpetas (la carpeta <code>api</code> es la que Azure convierte en el backend):</p>
+<div class="files">raíz-del-proyecto/
+├─ index.html                (la app)
+├─ sw.js                     (modo sin señal)
+├─ staticwebapp.config.json  (rutas)
+└─ api/
+   ├─ host.json
+   ├─ package.json
+   └─ src/
+      ├─ index.js            (API: login, datos, permisos)
+      ├─ dal.js              (acceso a Azure SQL)
+      └─ catalog.js          (catálogo + datos de ejemplo)
+
+(db_azure_sql.sql va aparte: se ejecuta en la base, no se despliega)</div>
+
+<div class="warn">🔐 <b>Nunca</b> pongas contraseñas ni el secreto dentro de estos archivos. Van en la <b>configuración</b> de Azure (Parte D). El código los lee desde ahí.</div>
+
+<h2>Parte A — Crear la base de datos (Azure SQL)</h2>
+<div class="step"><span class="num">1</span>En el <b>Portal de Azure</b> → <b>Create a resource</b> → busca <b>Azure SQL</b> → <b>SQL Database</b> → Create.</div>
+<div class="step"><span class="num">2</span>Elige tu <b>suscripción</b> y crea (o elige) un <b>Resource group</b> (ej. <code>rg-mantenimiento</code>). Nombre de base: <code>mantenimiento</code>.</div>
+<div class="step"><span class="num">3</span>En <b>Server</b> → <b>Create new</b>: nombre único (ej. <code>sql-mantenimiento-sur</code>), región cercana, y <b>Authentication method</b> = <b>Use SQL authentication</b>. Define un <b>Server admin login</b> (ej. <code>adminsql</code>) y una <b>contraseña</b> fuerte. <b>Anótalas</b>: son las que irán en la configuración.</div>
+<div class="step"><span class="num">4</span>En <b>Compute + storage</b>, para costo mínimo elige <b>General Purpose → Serverless</b> (se pausa sola y hay una capa gratuita mensual) o <b>Basic</b>. Crea el recurso y espera a que termine.</div>
+<div class="step"><span class="num">5</span><b>Permitir el acceso.</b> Abre el <b>servidor SQL</b> (no la base) → <b>Networking</b> → en <b>Firewall rules</b> activa <b>“Allow Azure services and resources to access this server”</b> y guarda. Esto deja que las Functions se conecten. Para el paso siguiente, agrega también tu IP actual (<b>Add your client IPv4 address</b>).</div>
+
+<h2>Parte B — Crear las tablas</h2>
+<div class="step"><span class="num">1</span>Abre la <b>base de datos</b> <code>mantenimiento</code> → <b>Query editor (preview)</b> en el menú lateral → inicia sesión con el <b>admin SQL</b> y contraseña de la Parte A.</div>
+<div class="step"><span class="num">2</span>Abre el archivo <code>db_azure_sql.sql</code>, copia <b>todo</b> su contenido, pégalo y pulsa <b>Run</b>. Debe decir <i>Query succeeded</i>. (No inserta datos; la API los crea sola en el primer ingreso.)</div>
+
+<h2>Parte C — Publicar la app (Static Web App)</h2>
+<p>La forma estándar y repetible es conectar un <b>repositorio de GitHub</b>; Azure compila y publica solo cada vez que actualices. (Si tu empresa usa Azure DevOps, la lógica es igual con un pipeline.)</p>
+<div class="step"><span class="num">1</span>Sube los archivos (con la estructura de arriba) a un repositorio de <b>GitHub</b> — privado está bien.</div>
+<div class="step"><span class="num">2</span>Portal de Azure → <b>Create a resource</b> → <b>Static Web App</b> → Create. Suscripción y el mismo <b>Resource group</b>. Nombre: <code>mantenimiento</code>. Plan: <b>Free</b>.</div>
+<div class="step"><span class="num">3</span>En <b>Deployment</b>: <b>GitHub</b> → autoriza y elige tu repo y rama (<code>main</code>).</div>
+<div class="step"><span class="num">4</span>En <b>Build Details</b>:
+  <ul>
+    <li><b>Build Presets:</b> <code>Custom</code></li>
+    <li><b>App location:</b> <code>/</code></li>
+    <li><b>Api location:</b> <code>api</code></li>
+    <li><b>Output location:</b> <i>(déjalo vacío)</i></li>
+  </ul>
+</div>
+<div class="step"><span class="num">5</span>Create. Azure agrega un workflow a tu repo y hace el primer despliegue (2–4 min). Tu URL aparece en la página del recurso (<b>Overview → URL</b>).</div>
+
+<h2>Parte D — Conectar la API con la base (configuración/secretos)</h2>
+<p>Aquí van los datos sensibles, <b>fuera del código</b>.</p>
+<div class="step"><span class="num">1</span>Abre tu <b>Static Web App</b> → <b>Settings → Environment variables</b> (o <b>Configuration</b>) → <b>Application settings</b>.</div>
+<div class="step"><span class="num">2</span>Agrega estas 5 variables (botón <b>Add</b> por cada una) y guarda:</div>
+
+<table>
+  <tr><th>Nombre</th><th>Valor</th></tr>
+  <tr><td><code>SQL_SERVER</code></td><td>tu servidor, ej. <code>sql-mantenimiento-sur.database.windows.net</code></td></tr>
+  <tr><td><code>SQL_DATABASE</code></td><td><code>mantenimiento</code></td></tr>
+  <tr><td><code>SQL_USER</code></td><td>el admin SQL, ej. <code>adminsql</code></td></tr>
+  <tr><td><code>SQL_PASSWORD</code></td><td>la contraseña del admin SQL</td></tr>
+  <tr><td><code>JWT_SECRET</code></td><td>una frase secreta larga que inventes (30+ caracteres al azar). Firma los tokens de sesión.</td></tr>
+</table>
+
+<div class="tip">💡 Para generar un <code>JWT_SECRET</code> al azar, sirve cualquier cadena larga sin espacios (mezcla de letras, números y símbolos). No la compartas con nadie.</div>
+<div class="warn">Tras guardar variables, dale a la app un minuto (reinicia la API). Si algo no conecta, revisa que el <b>firewall del servidor SQL</b> tenga activado “Allow Azure services” (Parte A, paso 5).</div>
+
+<h2>Parte E — Primer ingreso y puesta a punto</h2>
+<div class="step"><span class="num">1</span>Abre la <b>URL</b> de tu Static Web App. Verás la pantalla de <b>Iniciar sesión</b>.</div>
+<div class="step"><span class="num">2</span>Entra como <b>administrador</b> con las credenciales iniciales:
+  <ul><li>Usuario: <code>admin</code></li><li>Contraseña: <code>Admin1234</code></li></ul>
+  La app te pedirá <b>cambiar la contraseña</b> de inmediato (obligatorio).
+</div>
+<div class="step"><span class="num">3</span>Se cargan solos los datos de ejemplo (4 usuarios y 45 herramientas). Ve a <b>Personal</b> y crea a tus técnicos reales (o edita los de ejemplo). Al crear una persona, su contraseña inicial es <code>Clave1234</code> y también deberá cambiarla en su primer ingreso.</div>
+<div class="step"><span class="num">4</span>En <b>Inventario</b> ajusta las herramientas, asígnalas a cada técnico y edita sus checklists.</div>
+<div class="step"><span class="num">5</span>Comparte la <b>misma URL</b> con el equipo. Cada técnico entra con su usuario y contraseña y ve solo sus herramientas. En el celular pueden usar <b>“Agregar a pantalla de inicio”</b> para que se vea como una app.</div>
+
+<div class="danger">🔑 <b>Cambia las contraseñas por defecto.</b> Los usuarios <code>jperez</code>, <code>msoto</code>, <code>rlopez</code> traen la clave <code>Clave1234</code>: bórralos o cámbiales la clave si no corresponden a personas reales. El sistema obliga a cambiar la clave en el primer ingreso, pero no dejes cuentas de ejemplo abiertas.</div>
+
+<hr>
+<h2>Preguntas frecuentes</h2>
+<h3>¿Cuánto cuesta?</h3>
+<p>El <b>Static Web App Free</b> incluye la API (Functions) sin costo. La <b>base de datos</b> es lo único que puede costar: en Serverless con capa gratuita o Basic, es muy bajo (del orden de pocos dólares al mes o menos según uso). No hay costo de servidor aparte.</p>
+<h3>¿Los técnicos necesitan cuenta de Microsoft?</h3>
+<p>No. El login es propio (usuario y contraseña que tú administras en la app). Solo tú necesitas el acceso al Portal de Azure para administrar la infraestructura.</p>
+<h3>¿Se sincroniza al instante?</h3>
+<p>La app se actualiza automáticamente cada ~15 segundos y al volver a abrirla, además del botón <b>Refrescar</b>. Es prácticamente en vivo, sin servicios extra.</p>
+<h3>¿Funciona sin señal?</h3>
+<p>Sí, una vez abierta con conexión. Si se cae la red, el técnico sigue registrando; los cambios se encolan y se sincronizan al volver la señal (verás abajo el aviso “Sin conexión” con el contador de pendientes).</p>
+<h3>¿Cómo actualizo la app más adelante?</h3>
+<p>Editas el archivo en el repositorio de GitHub y Azure vuelve a publicar solo. La base de datos y las variables no se tocan.</p>
+<h3>¿Y si olvido la contraseña de admin?</h3>
+<p>Se puede restablecer directamente en la base (Query editor) reemplazando el <code>password_hash</code> del usuario admin. Avísame y te paso la instrucción puntual cuando la necesites.</p>
+
+<hr>
+<p class="sub">¿Te trancas en algún paso del portal? Escríbeme en qué pantalla estás y lo resolvemos juntos.</p>
+
+</body>
+</html>
